@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<style type="text/css" media="screen, print">
+			body  { margin: 30px 50px; font-family: sans-serif; }
+		</style>
+		<title>Gapminder</title>
+	</head>
+	<body>
+		<h1>Gapminder</h1>
+
+		<script src="../vendor/d3-7.6.1/dist/d3.js"></script>
+		<script>
+
+var f = d3.format('.2f');
+
+var body = d3.select("body");
+
+var margin = {top: 50, right: 150, bottom: 100, left: 100},
+    width = 1200 - margin.left - margin.right,
+    height = 800 - margin.top - margin.bottom;
+
+var svg = d3.select('body').append('svg');
+	
+var plot = svg
+	.attr("width", width + margin.left + margin.right)
+	.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform", `translate(${margin.left},${margin.top})`);
+
+var x = d3.scaleLog()
+	.range([0, width]);
+
+var y = d3.scaleLinear()
+	.range([height, 0]);
+
+var size = d3.scaleSqrt()
+	.range([1, 50]);
+
+var t = d3.scaleTime()
+	.range([0, width]);
+
+let region = 'world_4region';
+
+Promise.all(
+	// geo & time attributes
+	[
+		'population_total',
+		'life_expectancy_at_birth_with_projections',
+		'income_per_person_gdppercapita_ppp_inflation_adjusted',
+	].map(name =>
+		d3.csv(`../data/gapminder/ddf--datapoints--${name}--by--geo--time.csv`, d => ({
+			iso3:                  d.geo,
+			year:                 +d.time,
+			[name.split('_')[0]]: +d[name],
+		})))
+	
+	// country metadata
+	.concat([
+		'country',
+		region,
+	].map(name =>
+		d3.csv(`../data/gapminder/ddf--entities--geo--${name}.csv`)
+	))
+).then(function(datasets) {
+
+	// data /////////////////////////////////////////////////////////////////
+
+	let key = (d) => ([d.iso3, d.year].join('_'));
+	let population = datasets[0];
+	let life       = d3.index(datasets[1], key);
+	let income     = d3.index(datasets[2], key);
+	
+	let data = population.map(d => ({
+		...d,
+		...life.get(key(d)),
+		...income.get(key(d)),
+	}))
+		.filter(d => 'life' in d && 'income' in d);
+
+	var years = [...new Set(data.map(d => d.year))].map(d => new Date(`${d}`)).sort((a, b) => a - b);
+
+	// build lookup tables from country & world regions
+	let countries = d3.index(datasets[3], d => d.country);
+	let regions   = d3.index(datasets[4], d => d[region]);
+
+
+	// mapping //////////////////////////////////////////////////////////////
+
+//	x.domain(d3.extent(data, d => d.income));
+	x.domain([200, 200000]);
+//	y.domain(d3.extent(data, d => d.life));
+	y.domain([10, 90]);
+	size.domain([0., d3.max(data, d => d.population)]);
+//	t.domain(d3.extent(years)).clamp(true);
+	t.domain([d3.min(years), new Date('2023')]).clamp(true);
+
+
+	let [x0, x1] = x.range();
+	let [y0, y1] = y.range();
+	let [t0, t1] = t.domain();
+
+
+	// axis and cursors /////////////////////////////////////////////////////
+	
+	// horizontal & vertical axis
+
+	plot.append('g')
+		.attr('transform', `translate(${x0},${y0})`)
+		.call(d3.axisBottom(x));
+	plot.append('text')
+		.attr('transform', `translate(${x1},${y0+35})`)
+		.text("income per person")
+		.attr('text-anchor', 'end');
+
+	plot.append('g')
+		.attr('transform', `translate(${x0},${y1})`)
+		.call(d3.axisLeft(y));
+	plot.append('text')
+		.attr('transform', `translate(${x0-30},${y1}) rotate(-90)`)
+		.text('life expectancy')
+		.attr('text-anchor', 'end')
+
+	// grid
+	
+	var grid = plot.append('g');
+	grid.append('g')
+		.attr('transform', `translate(${x0},${y0})`)
+		.call(d3.axisBottom(x)
+			.tickSize(-height))
+		.call(g => g.select('.domain').remove())
+		.call(g => g.selectAll('.tick text').remove())
+		.call(g => g.selectAll('.tick')
+			.attr('stroke', 'lightgrey')
+			.attr('stroke-width', '.5'));
+	grid.append('g')
+		.attr('transform', `translate(${x0},${y1})`)
+		.call(d3.axisLeft(y)
+			.tickSize(-width))
+		.call(g => g.select('.domain').remove())
+		.call(g => g.selectAll('.tick text').remove())
+		.call(g => g.selectAll('.tick')
+			.attr('stroke-width', '.5'));
+	
+	var t_label = plot.append('text')
+		.attr('transform', `translate(${(x0+x1)/2},${(y0+y1)/2})`)
+		.attr('font-size', '300').attr('font-family', 'monospace')
+		.attr('fill', 'lightgrey')
+		.attr('text-anchor', 'middle')
+		.attr('dominant-baseline', 'middle')
+		.text('…');
+	
+	// cursors
+	
+	var x_cursor = plot.append('g');
+	x_cursor.append('line')
+		.attr('stroke', 'black')
+		.attr('stroke-dasharray', '5,5')
+		.attr('y1', `${y0}`)
+		.attr('y2', `${y0}`);
+	x_cursor.append('rect')
+		.attr('fill', 'white').attr('fill-opacity', '.75')
+		.attr('x', '-25').attr('width', '50')
+		.attr('y', `${y0+5}`).attr('height', '20');
+	x_cursor.append('text')
+		.attr('y', `${y0+22}`)
+		.attr('text-anchor', 'middle')
+		.text('…');
+
+	var y_cursor = plot.append('g')
+		.attr('transform', `translate(0,${y0})`);
+	y_cursor.append('line')
+		.attr('stroke', 'black')
+		.attr('stroke-dasharray', '5,5')
+		.attr('x1', `${x0}`)
+		.attr('x2', `${x0}`);
+	y_cursor.append('rect')
+		.attr('fill', 'white').attr('fill-opacity', '.75')
+		.attr('x', `${x0-55}`).attr('width', '50')
+		.attr('y', '-12').attr('height', '20');
+	y_cursor.append('text')
+		.attr('x', '-8').attr('y', '4')
+		.attr('text-anchor', 'end')
+		.text('…');
+	
+	var current_country;
+	function set_cursors(d) {
+		current_country = d.iso3;
+		x_cursor
+			.attr('transform', `translate(${x(d.income)})`)
+			.select('line')
+				.attr('y2', `${y(d.life)+size(d.population)}`);
+		x_cursor.select('text').text(d.income);
+		
+		y_cursor
+			.attr('transform', `translate(0,${y(d.life)})`)
+			.select('line')
+				.attr('x2', `${x(d.income)-size(d.population)}`);
+		y_cursor.select('text').text(f(d.life));
+	}
+	
+	
+	// bubbles //////////////////////////////////////////////////////////////
+	
+	var bubbles = plot.append('g');
+	function set_data(year, duration) {
+		var current = data.filter(d => d.year == year && d.iso3 == current_country)[0];
+		if(current != undefined) set_cursors(current);
+		
+		bubbles.selectAll('.country')
+			.data(data
+				.filter(d => d.year == year)
+				.sort((a, b) => d3.descending(a.population, b.population)),
+				d => d ? d.iso3 : this.id, // key
+			)
+			.join(
+				enter => enter.append('g')
+					.attr('class', d => `country ${countries.get(d.iso3)[region]}`)
+					.call(enter => enter
+						.append('circle')
+							.attr('fill', d => regions.get(countries.get(d.iso3)[region]).color)
+							.attr('stroke', 'black')
+							.attr('cx', d => x(d.income))
+							.attr('cy', d => y(d.life))
+						.append('title')
+							.text(d => `${countries.get(d.iso3).name}`))
+						.on('mouseenter', (e, d) => set_cursors(d))
+			)
+			.select('circle')
+				.transition().duration(duration)
+				.attr('r', d => size(d.population))
+				.attr('cx', d => x(d.income))
+				.attr('cy', d => y(d.life));
+	}
+
+
+	// interaction & animation //////////////////////////////////////////////
+
+	function clickable(elem) {
+		return elem
+			.on('mouseover', e => elem.style("cursor", "pointer"))
+			.on('mouseout',  e => elem.style("cursor", "default"));
+	}
+	
+	// regions
+	
+	var r_legend = plot.append('g')
+		.attr('transform', `translate(${x1+20},${y1+20})`);
+	r_legend.append('text')
+		.attr('font-size', '20')
+		.attr('font-weight', 'bold')
+		.text('Regions');
+		
+	r_legend.selectAll('.region')
+		.data(regions)
+		.join('g')
+			.attr('class', 'region')
+			.attr('transform', (d, i) => `translate(0,${i*18+24})`)
+			.call(elem => {
+				elem.append('rect')
+					.attr('fill', 'white')
+					.attr('y', '-14')
+					.attr('height', '18')
+					.attr('width', '100');
+				elem.append('text')
+					.attr('x', '25')
+					.text(d => d[1][region]);
+				elem.append('circle')
+					.attr('class', d => d[0])
+					.attr('cx', '8').attr('cy', '-4')
+					.attr('r', '6')
+					.attr('stroke', 'black')
+					.attr('fill', d => d[1].color);
+				elem.on('click', (e, d) => {
+					region = d[0];
+					visible = regions.get(region).visible
+					if(visible == undefined) visible = true;
+					visible = !visible;
+					regions.get(region).visible = visible;
+					svg.selectAll(`.${region}`)
+						.attr('opacity', visible ? '1.': '.1');
+					regions.get(region).visible = visible;
+				});
+				return clickable(elem);
+			});
+		
+	// year slider
+	
+	var t_slider = plot.append('g')
+		.attr('transform', `translate(0,${y0+70})`);
+	t_slider.call(d3.axisBottom().scale(t));
+	
+	var t_thumb = clickable(t_slider.append('g'));
+	
+	t_thumb.append('line')
+		.attr('stroke', 'black')
+		.attr('y2', '-10');
+	t_thumb.append('circle')
+		.attr('stroke', 'black')
+		.attr('fill', 'lightgray')
+		.attr('r', '5');
+	t_thumb.append('rect')
+		.attr('fill', 'white').attr('fill-opacity', '.75')
+		.attr('x', '-13').attr('width', '26')
+		.attr('y', '-22').attr('height', '12');
+	t_thumb.append('text')
+		.attr('fill', 'black')
+		.attr('y', '-12')
+		.attr('text-anchor', 'middle')
+		.text('…');
+
+	var t_x = 0;
+	t_thumb.call(d3.drag()
+		.on('start', e => {
+			t_x = e.x;
+		})
+		.on('drag',  e => {
+			playing = false;
+			t_x += e.dx;
+			year = t.invert(t_x);
+			year = d3.least(years, a => Math.abs(a-year)); // snap to existing years
+			set_year(year);
+		})
+	);
+
+
+	// year animation
+	
+	let play  = ' ▶';
+	let pause = '❙❙';
+	
+	var playing = false;
+	var play_pause = clickable(plot.append('g'))
+		.attr('transform', `translate(-30,${y0+76})`);
+	play_pause.append('circle')
+		.attr('fill', 'white').attr('fill-opacity', '.75')
+		.attr('stroke', 'grey')
+		.attr('r', '23')
+		.attr('cy', '-6');
+	play_pause.append('text')
+		.attr('font-size', '15')
+		.attr('text-anchor', 'middle')
+		.text(play);
+	
+	var year_timer;
+	function step_year() {
+		if(year_timer != undefined) year_timer.stop();
+		next_year = years.find(v => v > current_year);
+		if(!playing || next_year.getTime() > t1.getTime() || next_year.getTime() == current_year.getTime()) {
+			playing = false;
+			play_pause.select('text').text(play);
+			return;
+		}
+		set_year(next_year, 120);
+		year_timer = d3.timer(
+			elapsed => step_year(),
+			100
+		);
+	}
+	
+	play_pause
+		.on('click', e => {
+			playing = !playing;
+			if(playing) {
+				play_pause.select('text').text(pause);
+				step_year();
+			} else {
+				play_pause.select('text').text(play)
+				year_timer.stop();
+			}
+		});
+
+
+	// setting year
+	
+	var current_year;
+	function set_year(year, duration) {
+		current_year = year;
+		t_thumb.attr('transform', `translate(${t(year)})`);
+		year = year.getFullYear();
+		t_thumb.select('text').text(year);
+		t_label.text(year);
+		set_data(year, duration);
+	}
+			
+	let YEAR = new Date('2019');
+	set_year(YEAR, 500);
+
+});
+		</script>
+	</body>
+</html>
