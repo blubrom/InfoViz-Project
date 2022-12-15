@@ -2,9 +2,11 @@
 AFG	Afghanistan	Southern Asia	Asia
 AGO	Angola	Sub-Saharan Africa	Africa
 ALB	Albania	Southern Europe	Europe
+AND	Andorra	Europe	Europe
 ARE	United Arab Emirates	Western Asia	Asia
 ARG	Argentina	Latin America and the Caribbean	Americas
 ARM	Armenia	Western Asia	Asia
+ATG	Antigua and Barbuda	Americas	Americas
 AUS	Australia	Australia and New Zealand	Oceania
 AUT	Austria	Western Europe	Europe
 AZE	Azerbaijan	Western Asia	Asia
@@ -26,20 +28,25 @@ BRN	Brunei Darussalam	South-eastern Asia	Asia
 BTN	Bhutan	Southern Asia	Asia
 BWA	Botswana	Sub-Saharan Africa	Africa
 CAN	Canada	Northern America	Americas
+CAF	Central African Republic	Africa	Africa
 CHE	Switzerland	Western Europe	Europe
 CHL	Chile	Latin America and the Caribbean	Americas
 CHN	China	Eastern Asia	Asia
 CIV	Côte d’Ivoire	Sub-Saharan Africa	Africa
 CMR	Cameroon	Sub-Saharan Africa	Africa
 COD	Democratic Republic of the Congo	Sub-Saharan Africa	Africa
+COG	Congo	Africa	Africa
 COL	Colombia	Latin America and the Caribbean	Americas
+COM	Comoros	Africa	Africa
 CPV	Cabo Verde	Sub-Saharan Africa	Africa
 CRI	Costa Rica	Latin America and the Caribbean	Americas
 CUB	Cuba	Latin America and the Caribbean	Americas
 CYP	Cyprus	Western Asia	Asia
 CZE	Czechia	Eastern Europe	Europe
 DEU	Germany	Western Europe	Europe
+DMA	Dominica	Americas	Americas
 DNK	Denmark	Northern Europe	Europe
+DJI	Djibouti	Africa	Africa
 DOM	Dominican Republic	Latin America and the Caribbean	Americas
 DZA	Algeria	Northern Africa	Africa
 ECU	Ecuador	Latin America and the Caribbean	Americas
@@ -50,16 +57,21 @@ ETH	Ethiopia	Sub-Saharan Africa	Africa
 FIN	Finland	Northern Europe	Europe
 FJI	Fiji	Melanesia	Oceania
 FRA	France	Western Europe	Europe
+GAB	Gabon	Africa	Africa
 GBR	United Kingdom of Great Britain and Northern Ireland	Northern Europe	Europe
 GEO	Georgia	Western Asia	Asia
 GHA	Ghana	Sub-Saharan Africa	Africa
 GIN	Guinea	Sub-Saharan Africa	Africa
 GMB	Gambia	Sub-Saharan Africa	Africa
+GNB	Guinea-Bissau	Africa	Africa
+GNQ	Equatorial Guiana	Africa	Africa
 GRC	Greece	Southern Europe	Europe
 GTM	Guatemala	Latin America and the Caribbean	Americas
 GUY	Guyana	Latin America and the Caribbean	Americas
+HKG	Hong Kong	Asia	Asia
 HND	Honduras	Latin America and the Caribbean	Americas
 HRV	Croatia	Southern Europe	Europe
+HTI	Haiti	Caribbean	Americas
 HUN	Hungary	Eastern Europe	Europe
 IDN	Indonesia	South-eastern Asia	Asia
 IND	India	Southern Asia	Asia
@@ -81,11 +93,14 @@ KWT	Kuwait	Western Asia	Asia
 LAO	Lao People's Democratic Republic	South-eastern Asia	Asia
 LBN	Lebanon	Western Asia	Asia
 LBR	Liberia	Sub-Saharan Africa	Africa
+LBY	Libya	Africa	Africa
+LCA	Saint Lucia	Caribbean	Americas
 LKA	Sri Lanka	Southern Asia	Asia
 LSO	Lesotho	Sub-Saharan Africa	Africa
 LTU	Lithuania	Northern Europe	Europe
 LUX	Luxembourg	Western Europe	Europe
 LVA	Latvia	Northern Europe	Europe
+MAC	Macao	Asia	Asia
 MAR	Morocco	Northern Africa	Africa
 MDA	Republic of Moldova	Eastern Europe	Europe
 MDG	Madagascar	Sub-Saharan Africa	Africa
@@ -117,32 +132,40 @@ PER	Peru	Latin America and the Caribbean	Americas
 PHL	Philippines	South-eastern Asia	Asia
 PNG	Papua New Guinea	Melanesia	Oceania
 POL	Poland	Eastern Europe	Europe
+PRK	North Korea	Asia	Asia
 PRT	Portugal	Southern Europe	Europe
 PRY	Paraguay	Latin America and the Caribbean	Americas
+PSE	Palestine	Africa	Africa
 QAT	Qatar	Western Asia	Asia
+REU	Reunion	Africa	Africa
 ROU	Romania	Eastern Europe	Europe
 RUS	Russian Federation	Eastern Europe	Europe
 RWA	Rwanda	Sub-Saharan Africa	Africa
 SAU	Saudi Arabia	Western Asia	Asia
 SEN	Senegal	Sub-Saharan Africa	Africa
 SGP	Singapore	South-eastern Asia	Asia
+SLB	Solomon Islands	Oceania	Oceania
 SLE	Sierra Leone	Sub-Saharan Africa	Africa
 SLV	El Salvador	Latin America and the Caribbean	Americas
 SRB	Serbia	Southern Europe	Europe
+STP	Sao Tome and Principe	Africa	Africa
 SUR	Suriname	Latin America and the Caribbean	Americas
 SVK	Slovakia	Eastern Europe	Europe
 SVN	Slovenia	Southern Europe	Europe
 SWE	Sweden	Northern Europe	Europe
 SWZ	Eswatini	Sub-Saharan Africa	Africa
+SYC	Seychelles	Africa	Africa
 SYR	Syrian Arab Republic	Western Asia	Asia
 TCD	Chad	Sub-Saharan Africa	Africa
 TGO	Togo	Sub-Saharan Africa	Africa
 THA	Thailand	South-eastern Asia	Asia
 TJK	Tajikistan	Central Asia	Asia
+TKM	Turkmenistan	Asia	Asia
 TLS	Timor-Leste	South-eastern Asia	Asia
 TTO	Trinidad and Tobago	Latin America and the Caribbean	Americas
 TUN	Tunisia	Northern Africa	Africa
 TUR	Turkey	Western Asia	Asia
+TWN	Taiwan	China	Asia
 TZA	United Republic of Tanzania	Sub-Saharan Africa	Africa
 UGA	Uganda	Sub-Saharan Africa	Africa
 UKR	Ukraine	Eastern Europe	Europe
