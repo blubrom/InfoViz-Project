@@ -47,7 +47,7 @@
       .range([0, width]);
 
     //initialisation of global variables YEAR and type_emission
-    var type_emission='co2_per_capita'
+    var type_emission='co2_per_capita';
     let year = new Date('2018');
     
 
@@ -137,7 +137,7 @@
       let regions = d3.index(regions_list, d => d.region);
 
       data.map(d => { if (regions.get(countries.get(d.iso3).region) == undefined) { console.log(countries.get(d.iso3).region) } });
-
+      
       // mapping //////////////////////////////////////////////////////////////
       x.domain(d3.extent(data, d => d.gdp)).nice();
       // x.domain([200, 200000]);
@@ -237,27 +237,43 @@
       var current_country;
       function set_cursors(d) {
         current_country = d.iso3;
-        x_cursor
-          .attr('transform', `translate(${x(d.gdp)})`)
-          .select('line')
-          .attr('y2', `${y(d.co2) + size(d.population)}`);
-        x_cursor.select('text').text(d.gdp);
+        if (type_emission=='co2') {
+          x_cursor
+            .attr('transform', `translate(${x(d.gdp)})`)
+            .select('line')
+            .attr('y2', `${y(d.co2) + size(d.population)}`);
+          x_cursor.select('text').text(d.gdp);
 
-        y_cursor
-          .attr('transform', `translate(0,${y(d.co2)})`)
-          .select('line')
-          .attr('x2', `${x(d.gdp) - size(d.population)}`);
-        y_cursor.select('text').text(f(d.co2));
+          y_cursor
+            .attr('transform', `translate(0,${y(d.co2)})`)
+            .select('line')
+            .attr('x2', `${x(d.gdp) - size(d.population)}`);
+          y_cursor.select('text').text(f(d.co2));
+        }
+
+        if (type_emission=='co2_per_capita'){
+          x_cursor
+            .attr('transform', `translate(${x(d.gdp)})`)
+            .select('line')
+            .attr('y2', `${y(d.co2_per_capita) + size(d.population)}`);
+          x_cursor.select('text').text(d.gdp);
+
+          y_cursor
+            .attr('transform', `translate(0,${y(d.co2_per_capita)})`)
+            .select('line')
+            .attr('x2', `${x(d.gdp) - size(d.population)}`);
+          y_cursor.select('text').text(f(d.co2_per_capita));
+        }
       }
 
 
       // bubbles //////////////////////////////////////////////////////////////
 
       var bubbles = plot.append('g');
-      function set_data(year, duration, type_emission) {
+      function set_data(year, duration) {
         var current = data.filter(d => d.year == year && d.iso3 == current_country)[0];
         if (current != undefined) set_cursors(current);
-        if (type_emission=='co2')
+        if (type_emission=='co2') {
           bubbles.selectAll('.country')
             .data(data
               .filter(d => d.year == year)
@@ -282,31 +298,33 @@
             .attr('r', d => size(d.population))
             .attr('cx', d => x(d.gdp))
             .attr('cy', d => y(d.co2));
-          if (type_emission=='co2_per_capita')
-            bubbles.selectAll('.country')
-              .data(data
-                .filter(d => d.year == year)
-                .sort((a, b) => d3.descending(a.population, b.population)),
-                d => d ? d.iso3 : this.id, // key
-              )
-              .join(
-                enter => enter.append('g')
-                  .attr('class', d => `country ${countries.get(d.iso3).region}`)
-                  .call(enter => enter
-                    .append('circle')
-                    .attr('fill', d => regions.get(countries.get(d.iso3).region).color)
-                    .attr('stroke', 'black')
-                    .attr('cx', d => x(d.gdp))
-                    .attr('cy', d => y(d.co2))
-                    .append('title')
-                    .text(d => `${countries.get(d.iso3).name}`))
-                  .on('mouseenter', (e, d) => set_cursors(d))
-              )
-              .select('circle')
-              .transition().duration(duration)
-              .attr('r', d => size(d.population))
-              .attr('cx', d => x(d.gdp))
-              .attr('cy', d => y(d.co2_per_capita));
+        }
+        if (type_emission=='co2_per_capita') {
+          bubbles.selectAll('.country')
+            .data(data
+              .filter(d => d.year == year)
+              .sort((a, b) => d3.descending(a.population, b.population)),
+              d => d ? d.iso3 : this.id, // key
+            )
+            .join(
+              enter => enter.append('g')
+                .attr('class', d => `country ${countries.get(d.iso3).region}`)
+                .call(enter => enter
+                  .append('circle')
+                  .attr('fill', d => regions.get(countries.get(d.iso3).region).color)
+                  .attr('stroke', 'black')
+                  .attr('cx', d => x(d.gdp))
+                  .attr('cy', d => y(d.co2_per_capita))
+                  .append('title')
+                  .text(d => `${countries.get(d.iso3).name}`))
+                .on('mouseenter', (e, d) => set_cursors(d))
+            )
+            .select('circle')
+            .transition().duration(duration)
+            .attr('r', d => size(d.population))
+            .attr('cx', d => x(d.gdp))
+            .attr('cy', d => y(d.co2_per_capita));
+        }
       }
 
 
@@ -334,7 +352,7 @@
             .text('co2_per_capita')
           elem.on('click', (e, d) => {
             type_emission='co2_per_capita'
-            set_year(year, 500, type_emission);
+            set_year(year, 500);
           });
           return clickable(elem);
         })
@@ -353,7 +371,7 @@
             .text('co2')
           elem.on('click', (e, d) => {
             type_emission='co2'
-            set_year(year, 500, type_emission);
+            set_year(year, 500);
           });
           return clickable(elem);
         })
@@ -435,7 +453,7 @@
           t_x += e.dx;
           year = t.invert(t_x);
           year = d3.least(years, a => Math.abs(a - year)); // snap to existing years
-          set_year(year, 120, type_emission);
+          set_year(year, 120);
         })
       );
 
@@ -468,7 +486,7 @@
           return;
         }
         year=next_year
-        set_year(year, 120, type_emission);
+        set_year(year, 120);
         year_timer = d3.timer(
           elapsed => step_year(),
           100
@@ -491,16 +509,16 @@
       // setting year
 
       var current_year;
-      function set_year(year, duration, type_emission) {
+      function set_year(year, duration) {
         current_year = year;
         t_thumb.attr('transform', `translate(${t(year)})`);
         year = year.getFullYear();
         t_thumb.select('text').text(year);
         t_label.text(year);
-        set_data(year, duration, type_emission);
+        set_data(year, duration);
       }
 
-      set_year(year, 500, 'co2_per_capita');
+      set_year(year, 500);
 
     });
   </script>
