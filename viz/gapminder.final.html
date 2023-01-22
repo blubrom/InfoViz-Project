@@ -26,9 +26,9 @@
 
       var body = d3.select("body");
 
-      var margin = { top: 50, right: 150, bottom: 100, left: 100 },
-        width = 1200 - margin.left - margin.right,
-        height = 800 - margin.top - margin.bottom;
+    var margin = { top: 50, right:300 , bottom: 100, left: 50 },
+      width = 1500 - margin.left - margin.right,
+      height = 800 - margin.top - margin.bottom;
 
       var svg = d3.select("body").append("svg");
 
@@ -46,35 +46,28 @@
 
       var t = d3.scaleTime().range([0, width]);
 
+
+
       //initialisation of global variables YEAR and type_emission
       var type_emission = "co2";
       let year = new Date("2018");
+      var current_year;
+
 
       Promise.all([
-        d3.tsv("../data/owid-co2-data.tsv", (d) => ({
+        d3.tsv("../data/owid-co2-data.tsv", d => ({
           year: +d.year,
           iso3: d.iso_code,
           population: +d.population,
           gdp: +(d.gdp / d.population).toFixed(2),
           co2: +d.co2,
           co2_per_capita: +d.co2_per_capita,
-          share_global_cement_co2: +d.share_global_cement_co2,
-          share_global_co2: +d.share_global_co2,
-          share_global_coal_co2: +d.share_global_coal_co2,
-          share_global_cumulative_cement_co2:
-            +d.share_global_cumulative_cement_co2,
-          share_global_cumulative_co2: +d.share_global_cumulative_co2,
-          share_global_cumulative_coal_co2: +d.share_global_cumulative_coal_co2,
-          share_global_cumulative_flaring_co2:
-            +d.share_global_cumulative_flaring_co2,
-          share_global_cumulative_gas_co2: +d.share_global_cumulative_gas_co2,
-          share_global_cumulative_oil_co2: +d.share_global_cumulative_oil_co2,
-          share_global_cumulative_other_co2:
-            +d.share_global_cumulative_other_co2,
-          share_global_flaring_co2: +d.share_global_flaring_co2,
-          share_global_gas_co2: +d.share_global_gas_co2,
-          share_global_oil_co2: +d.share_global_oil_co2,
-          share_global_other_co2: +d.share_global_other_co2,
+          cement_co2: +d.cement_co2,
+          coal_co2: +d.coal_co2,
+          flaring_co2: +d.flaring_co2,
+          gas_co2: +d.gas_co2,
+          oil_co2: +d.oil_co2,
+          other_industry_co2: +d.other_industry_co2,
           trade_co2: +d.trade_co2,
           trade_co2_share: +d.trade_co2_share,
         })),
@@ -86,7 +79,7 @@
         d3.tsv("../data/gdp_threshold.tsv", (d) => ({
           year_threshold: +d.year_threshold,
           upper_middle_income: d.upper_middle_income,
-        })),
+        }))
       ]).then(function (datasets) {
         const threshold_data = datasets[2];
         let gdp_threshold = {};
@@ -286,105 +279,205 @@
           .attr("text-anchor", "end")
           .text("…");
 
-        var current_country;
-        function set_cursors(d) {
-          current_country = d.iso3;
+          var current_country;
+      function set_cursors(d) {
+        current_country = d.iso3;
+        if (type_emission=='co2') {
           x_cursor
-            .attr("transform", `translate(${x(d.gdp)})`)
-            .select("line")
-            .attr("y2", `${y(d.co2) + size(d.population)}`);
-          x_cursor.select("text").text(d.gdp);
+            .attr('transform', `translate(${x(d.gdp)})`)
+            .select('line')
+            .attr('y2', `${y(d.co2) + size(d.population)}`);
+          x_cursor.select('text').text(d.gdp);
 
           y_cursor
-            .attr("transform", `translate(0,${y(d.co2)})`)
-            .select("line")
-            .attr("x2", `${x(d.gdp) - size(d.population)}`);
-          y_cursor.select("text").text(f(d.co2));
+            .attr('transform', `translate(0,${y(d.co2)})`)
+            .select('line')
+            .attr('x2', `${x(d.gdp) - size(d.population)}`);
+          y_cursor.select('text').text(f(d.co2));
         }
 
-        // bubbles //////////////////////////////////////////////////////////////
+        if (type_emission=='co2_per_capita'){
+          x_cursor
+            .attr('transform', `translate(${x(d.gdp)})`)
+            .select('line')
+            .attr('y2', `${y(d.co2_per_capita) + size(d.population)}`);
+          x_cursor.select('text').text(d.gdp);
 
-        var bubbles = plot.append("g");
-        function set_data(year, duration, type_emission) {
-          var current = data.filter(
-            (d) => d.year == year && d.iso3 == current_country
-          )[0];
-          if (current != undefined) set_cursors(current);
-          if (type_emission == "co2")
-            bubbles
-              .selectAll(".country")
-              .data(
-                data
-                  .filter((d) => d.year == year)
-                  .sort((a, b) => d3.descending(a.population, b.population)),
-                (d) => (d ? d.iso3 : this.id) // key
-              )
-              .join((enter) =>
-                enter
-                  .append("g")
-                  .attr(
-                    "class",
-                    (d) => `country ${countries.get(d.iso3).region}`
-                  )
-                  .call((enter) =>
-                    enter
-                      .append("circle")
-                      .attr(
-                        "fill",
-                        (d) => regions.get(countries.get(d.iso3).region).color
-                      )
-                      .attr("stroke", "black")
-                      .attr("cx", (d) => x(d.gdp))
-                      .attr("cy", (d) => y(d.co2))
-                      .append("title")
-                      .text((d) => `${countries.get(d.iso3).name}`)
-                  )
-                  .on("mouseenter", (e, d) => set_cursors(d))
-              )
-              .select("circle")
-              .transition()
-              .duration(duration)
-              .attr("r", (d) => size(d.population))
-              .attr("cx", (d) => x(d.gdp))
-              .attr("cy", (d) => y(d.co2));
-          if (type_emission == "co2_per_capita")
-            bubbles
-              .selectAll(".country")
-              .data(
-                data
-                  .filter((d) => d.year == year)
-                  .sort((a, b) => d3.descending(a.population, b.population)),
-                (d) => (d ? d.iso3 : this.id) // key
-              )
-              .join((enter) =>
-                enter
-                  .append("g")
-                  .attr(
-                    "class",
-                    (d) => `country ${countries.get(d.iso3).region}`
-                  )
-                  .call((enter) =>
-                    enter
-                      .append("circle")
-                      .attr(
-                        "fill",
-                        (d) => regions.get(countries.get(d.iso3).region).color
-                      )
-                      .attr("stroke", "black")
-                      .attr("cx", (d) => x(d.gdp))
-                      .attr("cy", (d) => y(d.co2))
-                      .append("title")
-                      .text((d) => `${countries.get(d.iso3).name}`)
-                  )
-                  .on("mouseenter", (e, d) => set_cursors(d))
-              )
-              .select("circle")
-              .transition()
-              .duration(duration)
-              .attr("r", (d) => size(d.population))
-              .attr("cx", (d) => x(d.gdp))
-              .attr("cy", (d) => y(d.co2_per_capita));
+          y_cursor
+            .attr('transform', `translate(0,${y(d.co2_per_capita)})`)
+            .select('line')
+            .attr('x2', `${x(d.gdp) - size(d.population)}`);
+          y_cursor.select('text').text(f(d.co2_per_capita));
         }
+      }
+      
+/////////// pie chart ///////////
+      function country_sources(country, year){
+        // plot.remove("text");
+        document.getElementById("sources").innerHTML = "CO2 sources of " + countries.get(country).name + " in " + year
+
+        radius = 75;
+        var country_data = datasets[0].filter(d=>d.iso3 == country && d.year == year)
+      var sources_data = [{name: "Cement", share: country_data[0].cement_co2/parseInt(country_data[0].co2)*100}, 
+        {name: "Coal", share: country_data[0].coal_co2/parseInt(country_data[0].co2)*100},
+        {name: "Other", share:country_data[0].other_industry_co2/parseInt(country_data[0].co2)*100},
+        {name: "Gas", share: country_data[0].gas_co2/parseInt(country_data[0].co2)*100},
+        {name: "Flare", share: country_data[0].flaring_co2/parseInt(country_data[0].co2)*100},
+        {name: "Oil", share:country_data[0].oil_co2/parseInt(country_data[0].co2)*100}
+         ];
+
+      var ordScale = d3.scaleOrdinal()
+        .domain(sources_data)
+        .range(['#0F709D','#40403B','#DB0BD2','#d3e0ea','#F67C22',"#6B6B12"]);
+
+      var pie = d3.pie().value(function(d) { return d.share; });
+
+      
+
+      var arc = svg.selectAll("arc")
+       .data(pie(sources_data))
+       .enter();
+
+     var path = d3.arc()
+       .outerRadius(radius)
+       .innerRadius(0);
+
+        const arcs = document.getElementsByClassName("arcs");
+        while(arcs.length > 0){
+        arcs[0].parentNode.removeChild(arcs[0]);
+      }
+
+
+      arc.append("path")
+       .attr("d", path)
+       .attr("fill", function(d) { return ordScale(d.data.name); })
+       .attr("transform", `translate(${1330},${500})`)
+       .attr("class","arcs");
+
+       var label = d3.arc()
+        .outerRadius(radius)
+       .innerRadius(0);
+
+       const elements = document.getElementsByClassName("shares");
+        while(elements.length > 0){
+        elements[0].parentNode.removeChild(elements[0]);
+      }
+
+      arc.append("circle")
+      .attr("transform" , function(d){
+        var x,y;
+        if (d.data.name == "Coal" || d.data.name == "Gas" ||d.data.name == "Oil" ){
+          y= 600
+        }
+        else { y =650 }
+        if (d.data.name == "Coal" || d.data.name == "Cement" ){
+          x = 1250
+        }
+        else if(d.data.name == "Oil" || d.data.name == "Flare"){
+          x = 1330
+        }
+        else{
+          x = 1410
+        }
+        return "translate(" + x +","+y +")";
+      })
+      .attr("fill", function(d) { return ordScale(d.data.name); })
+      .attr('r', 5)
+      .attr("class","shares");
+
+
+      arc.append("text")
+      .attr("transform" , function(d){
+        var x,y;
+        if (d.data.name == "Coal" || d.data.name == "Gas" ||d.data.name == "Oil" ){
+          y= 620
+        }
+        else { y =670 }
+        if (d.data.name == "Coal" || d.data.name == "Cement" ){
+          x = 1205
+        }
+        else if(d.data.name == "Oil" || d.data.name == "Flare"){
+          x = 1305
+        }
+        else{
+          x = 1390
+        }
+        return "translate(" + x +","+y +")";
+        })
+           .text(function(d) { return d.data.name + " "+ Math.round(d.data.share*10)/10 +"%" ; })
+           .style("font-family", "arial")
+           .style("font-size", 15)
+           .attr("class","shares");
+
+
+      }
+      plot.append("text").text("CO2 sources of Afganistan in 2018")
+        .attr("transform", `translate(${1160},${350})`)
+        .attr("id","sources")
+      country_sources("FRA", "2018")
+
+
+      // bubbles //////////////////////////////////////////////////////////////
+
+      var bubbles = plot.append('g');
+      function set_data(year, duration) {
+        var current = data.filter(d => d.year == year && d.iso3 == current_country)[0];
+        if (current != undefined) set_cursors(current);
+        if (type_emission=='co2') {
+          bubbles.selectAll('.country')
+            .data(data
+              .filter(d => d.year == year)
+              .sort((a, b) => d3.descending(a.population, b.population)),
+              d => d ? d.iso3 : this.id, // key
+            )
+            .join(
+              enter => enter.append('g')
+                .attr('class', d => `country ${countries.get(d.iso3).region}`)
+                .call(enter => enter
+                  .append('circle')
+                  .attr('fill', d => regions.get(countries.get(d.iso3).region).color)
+                  .attr('stroke', 'black')
+                  .attr('cx', d => x(d.gdp))
+                  .attr('cy', d => y(d.co2))
+                  .append('title')
+                  .text(d => `${countries.get(d.iso3).name}`))
+                .on('mouseenter', (e, d) => set_cursors(d))
+                
+            )
+            .select('circle')
+            .transition().duration(duration)
+            .attr('r', d => size(d.population))
+            .attr('cx', d => x(d.gdp))
+            .attr('cy', d => y(d.co2));
+        }
+        if (type_emission=='co2_per_capita') {
+          bubbles.selectAll('.country')
+            .data(data
+              .filter(d => d.year == year)
+              .sort((a, b) => d3.descending(a.population, b.population)),
+              d => d ? d.iso3 : this.id, // key
+            )
+            .join(
+              enter => enter.append('g')
+                .attr('class', d => `country ${countries.get(d.iso3).region}`)
+                .call(enter => enter
+                  .append('circle')
+                  .attr('fill', d => regions.get(countries.get(d.iso3).region).color)
+                  .attr('stroke', 'black')
+                  .attr('cx', d => x(d.gdp))
+                  .attr('cy', d => y(d.co2_per_capita))
+                  .append('title')
+                  .text(d => `${countries.get(d.iso3).name}`))
+                .on('mouseenter', (e, d) => set_cursors(d))
+                .on("click", (e,d)=> country_sources(d.iso3,current_year.getFullYear()))
+            )
+            .select('circle')
+            .transition().duration(duration)
+            .attr('r', d => size(d.population))
+            .attr('cx', d => x(d.gdp))
+            .attr('cy', d => y(d.co2_per_capita));
+        }
+      }
 
         // interaction & animation //////////////////////////////////////////////
 
@@ -656,7 +749,6 @@
         console.log(find_threshold(2018));
         // setting year
 
-        var current_year;
         function set_year(year, duration, type_emission) {
           current_year = year;
           t_thumb.attr("transform", `translate(${t(year)})`);
