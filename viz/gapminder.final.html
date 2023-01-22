@@ -47,7 +47,7 @@
       var t = d3.scaleTime().range([0, width]);
 
       //initialisation of global variables YEAR and type_emission
-      var type_emission = "co2_per_capita";
+      var type_emission = "co2";
       let year = new Date("2018");
 
       Promise.all([
@@ -444,7 +444,8 @@
 
         var representation = plot
           .append("g")
-          .attr("transform", `translate(${x1 + 65},${y1 + 200})`);
+          .attr("transform", `translate(${x1 + 65},${y1 + 200})`)
+          .attr('opacity', '.2');
         representation.call((elem) => {
           elem
             .append("circle")
@@ -460,6 +461,8 @@
           elem.on("click", (e, d) => {
             type_emission = "co2_per_capita";
             set_year(year, 500, type_emission);
+            representation_2.attr('opacity', '.2');
+            representation.attr('opacity', '1');
           });
           return clickable(elem);
         });
@@ -482,6 +485,8 @@
           elem.on("click", (e, d) => {
             type_emission = "co2";
             set_year(year, 500, type_emission);
+            representation_2.attr('opacity', '1');
+            representation.attr('opacity', '.2');
           });
           return clickable(elem);
         });
